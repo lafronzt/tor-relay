@@ -8,7 +8,7 @@ RUN printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d \
     && chmod 755 /usr/sbin/policy-rc.d \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-    tor="${TOR_VERSION}" tor-geoipdb="${TOR_VERSION}" python3-minimal ca-certificates \
+    tor="${TOR_VERSION}" tor-geoipdb="${TOR_VERSION}" python3 ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 10001 relay \
     && useradd --uid 10001 --gid 10001 --home-dir /var/lib/tor --no-create-home --shell /usr/sbin/nologin relay \
