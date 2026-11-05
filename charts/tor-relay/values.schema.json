@@ -1,0 +1,209 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": [
+            "IfNotPresent",
+            "Always"
+          ]
+        }
+      },
+      "required": [
+        "repository",
+        "digest",
+        "pullPolicy"
+      ]
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    },
+    "relay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nickname": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]{1,19}$"
+        },
+        "publicIPv4": {
+          "type": "string",
+          "pattern": "^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$"
+        },
+        "contactInfo": {
+          "type": "string",
+          "pattern": "^[^\\r\\n\"\\\\#]+$",
+          "minLength": 3,
+          "maxLength": 250
+        },
+        "bandwidthRate": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]* (KB|MB|GB|TB)$"
+        },
+        "bandwidthBurst": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]* (KB|MB|GB|TB)$"
+        },
+        "accounting": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "max": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]* (KB|MB|GB|TB)$"
+            },
+            "start": {
+              "type": "string",
+              "pattern": "^(month ([1-9]|[12][0-9]|28)|week [1-7]|day) ([01][0-9]|2[0-3]):[0-5][0-9]$"
+            },
+            "rule": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "max",
+                "in",
+                "out"
+              ]
+            }
+          },
+          "required": [
+            "enabled",
+            "max",
+            "start",
+            "rule"
+          ]
+        }
+      },
+      "required": [
+        "nickname",
+        "publicIPv4",
+        "contactInfo",
+        "bandwidthRate",
+        "bandwidthBurst",
+        "accounting"
+      ]
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "className": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]*$",
+          "minLength": 1
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*(Mi|Gi|Ti)$"
+        }
+      },
+      "required": [
+        "className",
+        "size"
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "required": [
+        "requests",
+        "limits"
+      ],
+      "properties": {
+        "requests": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory",
+            "ephemeral-storage"
+          ],
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory",
+            "ephemeral-storage"
+          ],
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "nodeSelector": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ]
+    }
+  },
+  "required": [
+    "image",
+    "imagePullSecrets",
+    "relay",
+    "storage",
+    "resources",
+    "nodeSelector",
+    "networkPolicy"
+  ],
+  "$schema": "https://json-schema.org/draft-07/schema#"
+}

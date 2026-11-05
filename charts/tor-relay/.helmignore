@@ -1,0 +1,14 @@
+.git/
+.DS_Store
+*.local.yaml
+values.local.yaml
+.env
+.env.*
+*.key
+*.pem
+*.age
+*.log
+backups/
+data/
+private/
+secrets/

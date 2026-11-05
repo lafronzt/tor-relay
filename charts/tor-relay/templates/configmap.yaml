@@ -1,0 +1,52 @@
+{{- if ne .Release.Namespace "tor-relay" -}}
+{{- fail "Use namespace tor-relay; this chart intentionally owns fixed resource names" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tor-relay-config
+  namespace: tor-relay
+  labels:
+    {{- include "tor-relay.labels" . | nindent 4 }}
+data:
+  torrc: |
+    Nickname {{ .Values.relay.nickname }}
+    ContactInfo {{ required "relay.contactInfo must be a publishable working contact" .Values.relay.contactInfo | quote }}
+    Address {{ required "relay.publicIPv4 must be the verified public IPv4" .Values.relay.publicIPv4 }}
+    ORPort 9001 IPv4Only
+    SocksPort 0
+    ControlPort 0
+    DirPort 0
+    DNSPort 0
+    TransPort 0
+    HTTPTunnelPort 0
+    ExitRelay 0
+    ExitPolicy reject *:*
+    IPv6Exit 0
+    BridgeRelay 0
+    ClientOnly 0
+    DataDirectory /var/lib/tor/data
+    DataDirectoryGroupReadable 0
+    PidFile /run/tor/private/tor.pid
+    RunAsDaemon 0
+    Log notice stdout
+    SafeLogging 1
+    ProtocolWarnings 1
+    HeartbeatPeriod 1 hour
+    ShutdownWaitLength 30 seconds
+    NumCPUs 1
+    MaxMemInQueues 256 MB
+    RelayBandwidthRate {{ .Values.relay.bandwidthRate }}
+    RelayBandwidthBurst {{ .Values.relay.bandwidthBurst }}
+    # Count peers even if Kubernetes NAT makes their source address private.
+    CountPrivateBandwidth 1
+    ControlSocket /run/tor/private/control
+    ControlSocketsGroupWritable 0
+    CookieAuthentication 1
+    CookieAuthFile /run/tor/private/control.authcookie
+    CookieAuthFileGroupReadable 0
+    {{- if .Values.relay.accounting.enabled }}
+    AccountingMax {{ .Values.relay.accounting.max }}
+    AccountingStart {{ .Values.relay.accounting.start }}
+    AccountingRule {{ .Values.relay.accounting.rule }}
+    {{- end }}

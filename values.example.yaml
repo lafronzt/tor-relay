@@ -1,0 +1,19 @@
+# Copy to values.local.yaml (gitignored). Replace ALL required values.
+image:
+  repository: "" # e.g. ghcr.io/YOUR_ACCOUNT/tor-relay
+  digest: "" # sha256:... from the successful image push
+relay:
+  publicIPv4: "" # verified public WAN IPv4, not the node's LAN address
+  contactInfo: "" # publicly listed working email address
+  bandwidthRate: "2 MB"
+  bandwidthBurst: "4 MB"
+  accounting:
+    enabled: false
+    max: "1 TB"
+    start: "month 1 00:00"
+    rule: sum
+storage:
+  className: "" # verify; commonly microk8s-hostpath
+  size: 1Gi
+# nodeSelector:
+#   kubernetes.io/hostname: YOUR_VERIFIED_NODE

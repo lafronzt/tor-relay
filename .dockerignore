@@ -1,0 +1,6 @@
+# Only the files required to build the image may reach the Docker daemon.
+**
+!image/
+!image/Dockerfile
+!image/entrypoint.py
+!image/health.py

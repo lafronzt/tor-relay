@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tor-relay-data
+  namespace: tor-relay
+  annotations:
+    helm.sh/resource-policy: keep
+  labels:
+    {{- include "tor-relay.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: {{ required "storage.className must be verified against your cluster" .Values.storage.className | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.size }}

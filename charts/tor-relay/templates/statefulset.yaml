@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tor-relay
+  namespace: tor-relay
+  labels:
+    {{- include "tor-relay.labels" . | nindent 4 }}
+spec:
+  serviceName: tor-relay-headless
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tor-relay
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "tor-relay.labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 90
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: tor
+          image: {{ printf "%s@%s" (required "image.repository is required" .Values.image.repository) (required "image.digest is required" .Values.image.digest) | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: orport
+              containerPort: 9001
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            exec:
+              command: ["/usr/local/bin/tor-health", "live"]
+            periodSeconds: 5
+            timeoutSeconds: 4
+            failureThreshold: 60
+          livenessProbe:
+            exec:
+              command: ["/usr/local/bin/tor-health", "live"]
+            periodSeconds: 30
+            timeoutSeconds: 4
+            failureThreshold: 5
+          readinessProbe:
+            exec:
+              command: ["/usr/local/bin/tor-health", "ready"]
+            periodSeconds: 10
+            timeoutSeconds: 4
+            failureThreshold: 3
+          lifecycle:
+            preStop:
+              exec:
+                # Tor drains on SIGINT, not Kubernetes' usual SIGTERM.
+                command: ["/usr/local/bin/tor-health", "shutdown"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/tor/torrc
+              subPath: torrc
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/tor
+            - name: run
+              mountPath: /run/tor
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: tor-relay-config
+            defaultMode: 0444
+        - name: data
+          persistentVolumeClaim:
+            claimName: tor-relay-data
+        - name: run
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Mi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 32Mi

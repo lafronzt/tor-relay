@@ -1,0 +1,48 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tor-relay
+  namespace: tor-relay
+  labels:
+    {{- include "tor-relay.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: tor-relay
+  policyTypes: [Ingress, Egress]
+  ingress:
+    # Any source: peers are global and NodePort can SNAT to a node address.
+    - ports:
+        - protocol: TCP
+          port: 9001
+  egress:
+    # Cluster DNS (including NodeLocal DNS); Tor needs public DNS at bootstrap.
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Relays and directory servers use arbitrary TCP ports. Exclude LAN, pod,
+    # service, link-local and reserved IPv4 ranges. DNS above is the exception.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 0.0.0.0/8
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 192.168.0.0/16
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+{{- end }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tor-relay
+description: Single-node, non-exit Tor relay with a private control socket
+type: application
+version: 0.1.0
+appVersion: "0.4.9.15"
